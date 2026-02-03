@@ -1,81 +1,28 @@
-:root {
-    --background-color-light: #f0f0f0;
-    --text-color-light: #333;
-    --container-bg-light: #fff;
-    --button-bg-light: #4CAF50;
-    --button-text-light: #fff;
-
-    --background-color-dark: #333;
-    --text-color-dark: #f0f0f0;
-    --container-bg-dark: #444;
-    --button-bg-dark: #555;
-    --button-text-dark: #f0f0f0;
-}
-
 body {
     font-family: sans-serif;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-body.light-mode {
-    background-color: var(--background-color-light);
-    color: var(--text-color-light);
-}
-
-body.dark-mode {
-    background-color: var(--background-color-dark);
-    color: var(--text-color-dark);
-}
-
-.container {
-    max-width: 500px;
-    margin: 50px auto;
-    padding: 20px;
+    background-color: #f0f0f0;
+    color: #333;
     text-align: center;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-body.light-mode .container {
-    background-color: var(--container-bg-light);
-}
-
-body.dark-mode .container {
-    background-color: var(--container-bg-dark);
-}
-
-.lotto-numbers {
+#game-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    align-items: flex-start;
+    margin-top: 20px;
 }
 
-.number {
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-    line-height: 50px;
-    border-radius: 50%;
-    background-color: #eee;
-    margin: 0 5px;
-    font-size: 20px;
-    font-weight: bold;
+#tetris-canvas {
+    border: 5px solid #333;
+    background-color: #000;
 }
 
-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+#info {
+    margin-left: 20px;
+    text-align: left;
 }
 
-body.light-mode button {
-    background-color: var(--button-bg-light);
-    color: var(--button-text-light);
-}
-
-body.dark-mode button {
-    background-color: var(--button-bg-dark);
-    color: var(--button-text-dark);
+#next-canvas {
+    border: 3px solid #333;
+    background-color: #000;
 }
