@@ -157,8 +157,14 @@ function drawBoard() {
     });
 }
 
+const pauseBtn = document.getElementById('pause-btn');
+
+let paused = false;
+
+// ... (rest of the existing code)
+
 function update() {
-    if (!gameOver) {
+    if (!gameOver && !paused) {
         context.clearRect(0, 0, canvas.width, canvas.height);
         drawBoard();
         tetromino.draw();
@@ -167,7 +173,7 @@ function update() {
 }
 
 document.addEventListener('keydown', event => {
-    if (!gameOver) {
+    if (!gameOver && !paused) {
         if (event.key === 'ArrowLeft') {
             tetromino.move(-1, 0);
         } else if (event.key === 'ArrowRight') {
@@ -178,6 +184,11 @@ document.addEventListener('keydown', event => {
             tetromino.rotate();
         }
     }
+});
+
+pauseBtn.addEventListener('click', () => {
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
 });
 
 spawnTetromino();
