@@ -9,8 +9,9 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column; /* Changed to column to stack elements vertically */
+            justify-content: flex-start; /* Align items from the start vertically */
+            align-items: center; /* Center items horizontally */
             min-height: 100vh;
             margin: 0;
         }
@@ -63,6 +64,11 @@
         }
         button:hover {
             background-color: #0056b3;
+        }
+        #disqus_thread {
+            width: 100%;
+            max-width: 700px; /* Adjust as needed */
+            margin-top: 40px; /* Space from the form */
         }
     </style>
 </head>
