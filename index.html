@@ -71,37 +71,117 @@
     </nav>
     <h1>얼굴로 보는 동물상 테스트</h1>
     <div class="description">
-        당신의 얼굴이 고양이상인지, 강아지상인지 인공지능이 분석해 드립니다! 사진을 업로드해 주세요.
+        당신의 얼굴이 고양이상인지, 강아지상인지 인공지능이 분석해 드립니다! 웹캠을 사용하거나 사진을 업로드해 주세요.
     </div>
 
-    <input type="file" id="file-input" accept="image/*" onchange="init()" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+    <div style="margin-bottom: 20px;">
+        <button type="button" id="webcamToggleButton" onclick="toggleWebcam()">카메라 켜기</button>
+        <input type="file" id="file-input" accept="image/*" onchange="handleFileUpload()" style="margin-left: 10px; padding: 5px;">
+    </div>
+    
+    <div id="webcam-container" style="border: 2px solid #ddd; border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); display: none;"></div>
     <img id="uploaded-image" style="max-width: 300px; max-height: 300px; margin-top: 20px; border: 1px solid #eee; display: none;">
     <div id="label-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script type="text/javascript">
-        // More API functions here:
-        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
-
-        // the link to your model provided by Teachable Machine export panel
         const URL = "https://teachablemachine.withgoogle.com/models/DfAXjTgSG/";
 
         let model, labelContainer, maxPredictions;
-        let imageElement, imageCanvas, ctx; // New variables for uploaded image
+        let webcam; // Webcam instance
+        let imageElement; // Image element for file upload preview
+        let imageCanvas, ctx; // Off-screen canvas for image prediction
 
-        // Load the image model and setup for prediction from uploaded image
+        let isWebcamActive = false;
+        let currentPredictionSource = null; // 'webcam' or 'image'
+
+        let loopId; // To store the requestAnimationFrame ID
+
+        const webcamToggleButton = document.getElementById("webcamToggleButton");
+        const fileInput = document.getElementById("file-input");
+        const webcamContainer = document.getElementById("webcam-container");
+        imageElement = document.getElementById("uploaded-image");
+        labelContainer = document.getElementById("label-container");
+
+
+        // Function to load the Teachable Machine model
+        async function loadModel() {
+            if (!model) { // Load model only once
+                const modelURL = URL + "model.json";
+                const metadataURL = URL + "metadata.json";
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+
+                // Initialize label containers
+                labelContainer.innerHTML = '';
+                for (let i = 0; i < maxPredictions; i++) {
+                    labelContainer.appendChild(document.createElement("div"));
+                }
+            }
+        }
+
+        // Initialize function called on page load or if model needs re-init
         async function init() {
-            // Clear previous elements and results
-            document.getElementById("webcam-container").innerHTML = ''; // Ensure webcam container is cleared
-            document.getElementById("label-container").innerHTML = ''; // Clear labels
-            
-            const fileInput = document.getElementById("file-input");
-            imageElement = document.getElementById("uploaded-image");
+            await loadModel(); // Ensure model is loaded
+            // No prediction source active initially
+            clearResults();
+        }
+        init(); // Call init on page load to load model
+
+        function clearResults() {
+            labelContainer.innerHTML = '';
+            if (webcam && webcam.canvas) {
+                webcamContainer.innerHTML = ''; // Clear webcam canvas
+            }
+            imageElement.style.display = 'none'; // Hide uploaded image
+        }
+
+        // Toggle Webcam Functionality
+        async function toggleWebcam() {
+            if (isWebcamActive) {
+                // Stop webcam
+                await webcam.stop();
+                webcamContainer.style.display = 'none';
+                webcamContainer.innerHTML = ''; // Clear canvas
+                webcamToggleButton.innerText = "카메라 켜기";
+                isWebcamActive = false;
+                currentPredictionSource = null;
+                cancelAnimationFrame(loopId); // Stop the prediction loop
+                clearResults();
+            } else {
+                // Start webcam
+                await loadModel(); // Ensure model is loaded
+                if (imageElement.style.display === 'block') { // If an image is displayed, clear it
+                    imageElement.style.display = 'none';
+                }
+                
+                const flip = true; // whether to flip the webcam
+                if (!webcam) { // Initialize webcam only if it hasn't been yet
+                    webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+                }
+                await webcam.setup(); // request access to the webcam
+                await webcam.play();
+                webcamContainer.innerHTML = ''; // Clear previous content
+                webcamContainer.appendChild(webcam.canvas);
+                webcamContainer.style.display = 'block';
+                webcamToggleButton.innerText = "카메라 끄기";
+                isWebcamActive = true;
+                currentPredictionSource = 'webcam';
+                loopId = window.requestAnimationFrame(loop); // Start the prediction loop
+            }
+        }
+
+        // Handle File Upload Functionality
+        async function handleFileUpload() {
+            if (isWebcamActive) { // If webcam is active, stop it
+                await toggleWebcam(); // Stop webcam cleanly
+            }
+            clearResults(); // Clear any previous results
 
             if (fileInput.files.length === 0) {
-                imageElement.style.display = 'none';
                 console.log("No file selected.");
+                imageElement.style.display = 'none';
                 return;
             }
 
@@ -123,32 +203,44 @@
                     imageCanvas.height = 200;
                     ctx.drawImage(img, 0, 0, 200, 200); // Draw image to canvas
 
-                    // Load the model and metadata
-                    const modelURL = URL + "model.json";
-                    const metadataURL = URL + "metadata.json";
-                    model = await tmImage.load(modelURL, metadataURL);
-                    maxPredictions = model.getTotalClasses();
-
-                    labelContainer = document.getElementById("label-container");
-                    for (let i = 0; i < maxPredictions; i++) {
-                        labelContainer.appendChild(document.createElement("div"));
-                    }
-                    await predict(); // Run prediction once after image is loaded and model ready
+                    await loadModel(); // Ensure model is loaded and labels initialized
+                    currentPredictionSource = 'image';
+                    await predict(); // Run prediction once after image is loaded
                 };
             };
             reader.readAsDataURL(file);
         }
 
-        // predict function now uses the image from the off-screen canvas
+        // Prediction loop (only for webcam)
+        async function loop() {
+            if (isWebcamActive && webcam) {
+                webcam.update(); // update the webcam frame
+                await predict();
+            }
+            loopId = window.requestAnimationFrame(loop);
+        }
+
+        // Run the prediction based on the current source
         async function predict() {
-            if (!model || !imageCanvas || !ctx) {
-                console.log("Model or image not ready for prediction.");
+            if (!model || !currentPredictionSource) {
+                console.log("Model not ready or no prediction source selected.");
                 return;
             }
-            const prediction = await model.predict(imageCanvas); // Predict from imageCanvas
+
+            let predictionSource;
+            if (currentPredictionSource === 'webcam' && webcam && webcam.canvas) {
+                predictionSource = webcam.canvas;
+            } else if (currentPredictionSource === 'image' && imageCanvas) {
+                predictionSource = imageCanvas;
+            } else {
+                console.log("Invalid prediction source.");
+                return;
+            }
+
+            const prediction = await model.predict(predictionSource);
             for (let i = 0; i < maxPredictions; i++) {
                 const classPrediction =
-                    prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(0) + "%"; // Display as percentage
+                    prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(0) + "%";
                 labelContainer.childNodes[i].innerHTML = classPrediction;
             }
         }
