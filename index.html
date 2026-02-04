@@ -212,10 +212,14 @@
         }
 
         // Prediction loop (only for webcam)
+        let frameCount = 0;
         async function loop() {
             if (isWebcamActive && webcam) {
                 webcam.update(); // update the webcam frame
-                await predict();
+                if (frameCount % 10 === 0) { // Predict every 10 frames
+                    await predict();
+                }
+                frameCount++;
             }
             loopId = window.requestAnimationFrame(loop);
         }
@@ -238,11 +242,19 @@
             }
 
             const prediction = await model.predict(predictionSource);
-            for (let i = 0; i < maxPredictions; i++) {
-                const classPrediction =
-                    prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(0) + "%";
-                labelContainer.childNodes[i].innerHTML = classPrediction;
+            
+            // Find the top prediction
+            let topPrediction = prediction[0];
+            for (let i = 1; i < maxPredictions; i++) {
+                if (prediction[i].probability > topPrediction.probability) {
+                    topPrediction = prediction[i];
+                }
             }
+
+            labelContainer.innerHTML = ''; // Clear previous labels
+            const classPredictionText =
+                topPrediction.className + ": " + (topPrediction.probability * 100).toFixed(0) + "%";
+            labelContainer.appendChild(document.createElement("div")).innerHTML = classPredictionText;
         }
     </script>
 
