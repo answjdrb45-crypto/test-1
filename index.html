@@ -13,6 +13,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            flex-direction: column;
         }
         .container {
             background-color: #ffffff;
@@ -21,6 +22,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 500px;
+            margin-bottom: 40px;
         }
         h2 {
             text-align: center;
@@ -39,7 +41,7 @@
         input[type="text"],
         input[type="email"],
         textarea {
-            width: calc(100% - 20px);
+            width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -64,9 +66,14 @@
         button:hover {
             background-color: #0056b3;
         }
+        #disqus_thread {
+            width: 100%;
+            max-width: 700px;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h2>제휴 문의</h2>
         <form action="https://formspree.io/f/xykprbyl" method="POST">
@@ -86,22 +93,15 @@
         </form>
     </div>
 
+    <!-- Disqus 댓글 영역 -->
     <div id="disqus_thread"></div>
+
     <script>
-        /**
-        *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
-        *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
         var disqus_config = function () {
-        this.page.url = window.location.href;  // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'formspree-contact-form-1'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+            this.page.url = "https://test-1-19073484.web.app/";  // 🔥 배포 후 실제 주소로 변경
+            this.page.identifier = "contact-form-page-001";
         };
-        (function() { // DON'T EDIT BELOW THIS LINE
-        var d = document, s = d.createElement('script');
-        s.src = 'https://test-1-mxxr22irmh.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</body>
-</html>
+
+        (function() {
+            var d = document, s = d.createElement('script');
+            s.src = 'https://test-1-mxx
