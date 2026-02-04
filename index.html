@@ -3,110 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>제휴 문의</title>
+    <title>동물상 테스트 - 고양이 vs 강아지</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Arial', sans-serif;
             display: flex;
-            flex-direction: column; /* Changed to column to stack elements vertically */
-            justify-content: flex-start; /* Align items from the start vertically */
-            align-items: center; /* Center items horizontally */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             min-height: 100vh;
             margin: 0;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-        }
-        h2 {
-            text-align: center;
+            background-color: #f0f2f5;
             color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
             margin-bottom: 20px;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: bold;
-        }
-        input[type="text"],
-        input[type="email"],
-        textarea {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 100px;
+        .description {
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            max-width: 600px;
+            line-height: 1.6;
         }
         button {
-            background-color: #007bff;
+            background-color: #4CAF50;
             color: white;
-            padding: 12px 20px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 1.1em;
             cursor: pointer;
-            width: 100%;
-            font-size: 18px;
             transition: background-color 0.3s ease;
+            margin-bottom: 20px;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #45a049;
         }
-        #disqus_thread {
-            width: 100%;
-            max-width: 700px; /* Adjust as needed */
-            margin-top: 40px; /* Space from the form */
+        #webcam-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #label-container {
+            font-size: 1.2em;
+            color: #555;
+            min-height: 60px; /* To prevent layout shift */
+        }
+        #label-container div {
+            margin-bottom: 8px;
+            padding: 5px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>제휴 문의</h2>
-        <form action="https://formspree.io/f/xykprbyl" method="POST">
-            <div class="form-group">
-                <label for="name">이름:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">이메일:</label>
-                <input type="email" id="email" name="_replyto" required>
-            </div>
-            <div class="form-group">
-                <label for="message">메시지:</label>
-                <textarea id="message" name="message" required></textarea>
-            </div>
-            <button type="submit">문의하기</button>
-        </form>
+    <h1>얼굴로 보는 동물상 테스트</h1>
+    <div class="description">
+        당신의 얼굴이 고양이상인지, 강아지상인지 인공지능이 분석해 드립니다! 웹캠을 켜고 얼굴을 보여주세요.
     </div>
-    <div id="disqus_thread"></div>
-    <script>
-        /**
-        *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
-        *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
-        var disqus_config = function () {
-        this.page.url = window.location.href;  // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'formspree-contact-form-1'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-        };
-        (function() { // DON'T EDIT BELOW THIS LINE
-        var d = document, s = d.createElement('script');
-        s.src = 'https://test-1-mxxr22irmh.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-        })();
+
+    <button type="button" onclick="init()">테스트 시작!</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/DfAXjTgSG/";
+
+        let model, webcam, labelContainer, maxPredictions;
+
+        // Load the image model and setup the webcam
+        async function init() {
+            // Check if webcam is already running or model loaded to prevent re-initialization
+            if (webcam && webcam.webcam) {
+                console.log("Webcam already active.");
+                return;
+            }
+
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            // load the model and metadata
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // Convenience function to setup a webcam
+            const flip = true; // whether to flip the webcam
+            webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // append elements to the DOM
+            document.getElementById("webcam-container").innerHTML = ''; // Clear previous content if any
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            
+            labelContainer = document.getElementById("label-container");
+            labelContainer.innerHTML = ''; // Clear previous labels if any
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
+
+        async function loop() {
+            if (webcam) { // Ensure webcam is initialized before updating
+                webcam.update(); // update the webcam frame
+                await predict();
+            }
+            window.requestAnimationFrame(loop);
+        }
+
+        // run the webcam image through the image model
+        async function predict() {
+            if (!model || !webcam || !webcam.canvas) {
+                console.log("Model or webcam not ready for prediction.");
+                return;
+            }
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(0) + "%"; // Display as percentage
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+        }
     </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </body>
 </html>
